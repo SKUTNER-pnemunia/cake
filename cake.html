@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Cake Decoration</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0; /* Light grey background for the whole page */
+        }
+        .cake-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f5f5dc; /* Beige color for the card background */
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 600px; /* Adjust width as needed */
+            box-sizing: border-box;
+        }
+        .cake {
+            width: 250px;
+            height: 150px;
+            background-color: #f0e5d8;
+            border-radius: 50% / 20%;
+            position: relative;
+            text-align: center;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            transform: perspective(500px) rotateX(-10deg);
+            cursor: crosshair; /* Change cursor to crosshair for placement */
+        }
+        .whipped-cream {
+            width: 100%;
+            height: 90px;
+            background-color: #ffffff;
+            border-radius: 50% / 30%;
+            position: absolute;
+            top: -10px;
+            left: 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transform: rotateX(10deg);
+            clip-path: ellipse(50% 50% at 50% 50%);
+        }
+        .cake-name {
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: text;
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #fff;
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            max-width: 90%;
+            text-align: center;
+        }
+        .topping, .candle {
+            position: absolute;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .topping {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 20px;
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+        .candle {
+            width: 12px; /* Slightly smaller size */
+            height: 35px; /* Slightly smaller size */
+            background-color: #ffeb3b;
+            border-radius: 5px 5px 0 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 12px;
+            position: absolute;
+            z-index: 10; /* Make sure candles are above other elements */
+        }
+        .candle::after {
+            content: '🔥'; /* Flame emoji for the candle */
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px; /* Adjust flame size */
+        }
+        .candle:hover::before {
+            content: attr(data-message);
+            position: absolute;
+            bottom: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffeb3b;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .controls {
+            display: flex;
+            margin: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .left-controls, .right-controls {
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            margin: 0 10px;
+        }
+        .left-controls {
+            margin-right: 20px;
+        }
+        .right-controls {
+            margin-left: 20px;
+        }
+        .controls label, .controls button, .controls select, .controls input {
+            margin: 5px;
+        }
+        .add-btn, .delete-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 15px; /* Rounded edges */
+            width: 120px;
+            height: 35px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            line-height: 35px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin: 5px;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .controls input, .controls select {
+            border-radius: 15px; /* Rounded edges */
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+        #shareableLink {
+            width: 300px;
+            padding: 10px;
+            border-radius: 15px; /* Rounded edges */
+            border: 1px solid #ccc;
+            text-align: center;
+            background-color: #fff;
+            font-size: 16px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="cake-container">
+        <div class="cake" id="cake" onclick="placeTopping(event)">
+            <div class="whipped-cream" id="whippedCream">
+                <div class="cake-name" contenteditable="true" id="cakeName">Happy Birthday!</div>
+            </div>
+            <div id="toppingsContainer"></div>
+            <div id="candlesContainer"></div>
+        </div>
+
+        <div class="controls">
+            <div class="left-controls">
+                <label for="creamColor">Choose Whipped Cream Color:</label>
+                <select id="creamColor">
+                    <option value="#ffffff" selected>White</option>
+                    <option value="#ffcccb">Pink</option>
+                    <option value="#d3d3d3">Light Gray</option>
+                    <option value="#ffffe0">Light Yellow</option>
+                </select>
+                <button class="add-btn" onclick="changeCreamColor()">Change Whipped Cream Color</button>
+
+                <label for="toppingSelect">Choose Topping:</label>
+                <select id="toppingSelect">
+                    <option value="🍓">Strawberry</option>
+                    <option value="🍍">Pineapple</option>
+                    <option value="🍒">Cherry</option>
+                    <option value="🍎">Apple</option>
+                </select>
+                <button class="add-btn" onclick="addTopping()">Add Topping</button>
+                <button class="delete-btn" onclick="removeTopping()">Remove Last Topping</button>
+            </div>
+
+            <div class="right-controls">
+                <label for="candleMessage">Candle Message:</label>
+                <input type="text" id="candleMessage" placeholder="Enter candle message">
+                <button class="add-btn" onclick="addCandle()">Add Candle</button>
+                <button class="delete-btn" onclick="removeCandle()">Remove Last Candle</button>
+            </div>
+        </div>
+
+        <button class="add-btn" onclick="generateLink()">Generate Shareable Link</button>
+        <input type="text" id="shareableLink" readonly class="hidden">
+    </div>
+
+    <script>
+        let whippedCream = document.getElementById('whippedCream');
+        let toppingsContainer = document.getElementById('toppingsContainer');
+        let candlesContainer = document.getElementById('candlesContainer');
+        let cakeName = document.getElementById('cakeName');
+
+        // Load saved settings from URL parameters
+        function loadSettings() {
+            let params = new URLSearchParams(window.location.search);
+            cakeName.textContent = params.get('cakeName') || 'Happy Birthday!';
+            whippedCream.style.backgroundColor = params.get('creamColor') || '#ffffff';
+            toppingsContainer.innerHTML = decodeURIComponent(params.get('toppings') || '');
+            candlesContainer.innerHTML = decodeURIComponent(params.get('candles') || '');
+        }
+
+        function changeCreamColor() {
+            let color = document.getElementById('creamColor').value;
+            whippedCream.style.backgroundColor = color;
+            updateURL();
+        }
+
+        function placeTopping(event) {
+            if (event.target.classList.contains('cake')) {
+                let x = event.offsetX;
+                let y = event.offsetY;
+                let topping = document.createElement('div');
+                topping.className = 'topping';
+                topping.style.left = `${x - 10}px`; // Center the topping
+                topping.style.top = `${y - 10}px`; // Center the topping
+                topping.innerHTML = document.getElementById('toppingSelect').value;
+                toppingsContainer.appendChild(topping);
+                updateURL();
+            }
+        }
+
+        function addTopping() {
+            let topping = document.createElement('div');
+            topping.className = 'topping';
+            let x = Math.random() * (250 - 20); // Constrain to cake width
+            let y = Math.random() * (90 - 20); // Constrain to cake height
+            topping.style.left = `${x}px`;
+            topping.style.top = `${y}px`;
+            topping.innerHTML = document.getElementById('toppingSelect').value;
+            toppingsContainer.appendChild(topping);
+            updateURL();
+        }
+
+        function removeTopping() {
+            if (toppingsContainer.lastChild) {
+                toppingsContainer.removeChild(toppingsContainer.lastChild);
+                updateURL();
+            }
+        }
+
+        function addCandle() {
+            let candle = document.createElement('div');
+            candle.className = 'candle';
+            let x = Math.random() * (230 - 12); // Constrain to whipped cream width
+            let y = Math.random() * (70 - 35); // Constrain to whipped cream height
+            candle.style.left = `${x}px`;
+            candle.style.top = `${y}px`;
+            candle.setAttribute('data-message', document.getElementById('candleMessage').value || 'Happy Birthday');
+            // Ensure candles don't overlap
+            let candles = Array.from(candlesContainer.children);
+            let overlap = false;
+            for (let otherCandle of candles) {
+                let dx = Math.abs(x - parseFloat(otherCandle.style.left));
+                let dy = Math.abs(y - parseFloat(otherCandle.style.top));
+                if (dx < 20 && dy < 50) { // Rough overlap check
+                    overlap = true;
+                    break;
+                }
+            }
+            if (!overlap) {
+                candlesContainer.appendChild(candle);
+            }
+            updateURL();
+        }
+
+        function removeCandle() {
+            if (candlesContainer.lastChild) {
+                candlesContainer.removeChild(candlesContainer.lastChild);
+                updateURL();
+            }
+        }
+
+        function updateURL() {
+            let params = new URLSearchParams();
+            params.set('cakeName', cakeName.textContent);
+            params.set('creamColor', whippedCream.style.backgroundColor);
+            params.set('toppings', encodeURIComponent(toppingsContainer.innerHTML));
+            params.set('candles', encodeURIComponent(candlesContainer.innerHTML));
+            let newURL = `${window.location.pathname}?${params.toString()}`;
+            document.getElementById('shareableLink').value = newURL;
+            document.getElementById('shareableLink').classList.remove('hidden');
+        }
+
+        function generateLink() {
+            updateURL();
+        }
+
+        // Initialize settings on page load
+        loadSettings();
+    </script>
+</body>
+</html>
+
